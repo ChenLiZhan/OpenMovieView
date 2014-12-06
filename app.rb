@@ -26,7 +26,7 @@ class MovieCrawlerApp < Sinatra::Base
     enable :logging
   end
 
-  API_BASE_URI = 'http://localhost:4567'
+  API_BASE_URI = 'https://serene-citadel-5567.herokuapp.com'
 
   helpers do
     # RANK_LIST = { '1' => 'U.S.', '2' => 'Taiwan', '3' => 'DVD' }
