@@ -8,11 +8,9 @@ require 'haml'
 require 'sinatra/simple-navigation'
 require 'sinatra/flash'
 require 'httparty'
-require_relative 'model/movie'
-require_relative 'model/theater'
 
 # web version of MovieCrawlerApp(https://github.com/ChenLiZhan/SOA-Crawler)
-class MovieCrawlerApp < Sinatra::Base
+class MovieViewApp < Sinatra::Base
   set :views, Proc.new { File.join(root, "views") }
   # enable :sessions
   use Rack::Session::Pool
@@ -78,8 +76,6 @@ class MovieCrawlerApp < Sinatra::Base
       end
     end
   end
-
-  after { ActiveRecord::Base.connection.close }
 
   get '/' do
     haml :home
@@ -154,87 +150,4 @@ class MovieCrawlerApp < Sinatra::Base
     flash[:notice] = 'Record of movie deleted'
     redirect '/movie'
   end
-
-  # # namespace '/api/v1' do
-
-  post '/api/v2/movie' do
-    content_type :json, charset: 'utf-8'
-
-    body = request.body.read
-    begin
-      req = JSON.parse(body)
-      logger.info req
-    rescue Exception => e
-      puts e.message
-      halt 400
-    end
-    # movie = Movie.find_by(moviename: params[:name])
-    # if movie
-    #   # return "find"+params[:name]
-    #   # redirect "/api/v2/moviechecked/#{params[:name]}"
-    #   movie.movieinfo
-    # else
-    #   movie = Movie.new
-    #   movie.moviename = params[:name]
-    #   movie.movieinfo = get_movie_info(params[:name]).to_json
-    #   movie.save
-    #   movie.movieinfo
-    # end
-    movie = Movie.find_by(moviename: req['movie'])
-    if movie.nil?
-      movie = Movie.new
-      movie.moviename = req['movie']
-      movie.movieinfo = get_movie_info(req['movie']).to_json
-      movie.save
-    end
-
-    redirect "/api/v2/moviechecked/#{movie.id}"
-  end
-
-  get '/api/v2/moviechecked/:id' do
-    content_type :json, charset: 'utf-8'
-
-    movie = Movie.find(params[:id])
-    logger.info "result: #{movie.movieinfo}\n"
-    movie.movieinfo
-  end
-
-  delete '/api/v2/moviechecked/:id' do
-    Movie.destroy(params[:id])
-  end
-
-  get '/api/v2/:type/:category.json' do
-    content_type :json, charset: 'utf-8'
-
-    if @data = Theater.find_by(category: params[:category])
-      @data = {
-        'content_type' => @data.content_type,
-        'category' => @data.category,
-        'info' => JSON.parse(@data.content)
-      }
-      @data.to_json
-    else
-      data = params[:type] == 'info' ? get_infos(params[:category]) : \
-      get_ranks(params[:category])
-      theater = Theater.new
-      theater.content_type = data['content_type']
-      theater.category = data['category']
-      theater.content = data['content'].to_json
-      theater.save && data.to_json
-    end
-  end
-
-  post '/api/v2/checktop' do
-    content_type :json, charset: 'utf-8'
-    req = JSON.parse(request.body.read)
-    n = req['top']
-    halt 400 unless req.any?
-    halt 404 unless [*1..10].include? n
-    topsum(n).to_json
-  end
-
-  get '/info/' do
-    halt 400
-  end
-  # end
 end
