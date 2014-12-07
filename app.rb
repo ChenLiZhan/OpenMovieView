@@ -1,5 +1,4 @@
 require 'sinatra/base'
-require 'movie_crawler'
 require 'json'
 require 'sinatra/flash'
 require 'yaml'
@@ -25,55 +24,12 @@ class MovieViewApp < Sinatra::Base
   end
 
   API_BASE_URI = 'https://serene-citadel-5567.herokuapp.com'
+  API_VER = '/api/v2/'
 
   helpers do
     # RANK_LIST = { '1' => 'U.S.', '2' => 'Taiwan', '3' => 'DVD' }
-
-    def get_movie_info(moviename)
-      # begin
-        # halt 404 if moviename == nil?
-        movie_crawled={
-          'type' => 'movie_info',
-          'info' => []
-        }
-        movie_crawled['info'] = MovieCrawler.get_movie_info(moviename)
-        movie_crawled
-    end
-
-    def get_ranks(category)
-      halt 404 if category.to_i > 3
-      ranks_after = {
-        'content_type' => 'rank_table',
-        'category' => category,
-        'content' => []
-      }
-
-      ranks_after['content'] = MovieCrawler.get_table(category)
-      ranks_after
-    end
-
-    def get_infos(category)
-      halt 404 if category == nil?
-      infos_after = {
-        'content_type' => 'info_list',
-        'category' => category,
-        'content' => []
-      }
-
-      infos_after['content'] = MovieCrawler.movies_parser(category)
-      infos_after
-    end
-
-    def topsum(n)
-      us1 = YAML.load(MovieCrawler::us_weekend).reduce(&:merge)
-      tp1 = YAML.load(MovieCrawler::taipei_weekend).reduce(&:merge)
-      dvd1 = YAML.load(MovieCrawler::dvd_rank).reduce(&:merge)
-      keys = [us1, tp1, dvd1].flat_map(&:keys).uniq
-      keys = keys[0, n]
-
-      keys.map! do |k|
-        { k => [{us:us1[k] || "0" }, { tp:tp1[k] || "0" }, { dvd:dvd1[k] || "0"}] }
-      end
+    def api_url(resource)
+      URI.join(API_BASE_URI, API_VER, resource).to_s
     end
   end
 
@@ -82,13 +38,15 @@ class MovieViewApp < Sinatra::Base
   end
 
   get '/info/:category' do
-    @intros = get_infos(params[:category])
+    @category = params[:category]
+    @intros = HTTParty.get api_url("info/#{@category}.json")
 
     haml :intro
   end
 
   get '/rank/:category' do
-    @boxoffices = get_ranks(params[:category])
+    @category = params[:category]
+    @boxoffices = HTTParty.get api_url("rank/#{@category}.json")
 
     haml :boxoffice
   end
@@ -102,11 +60,11 @@ class MovieViewApp < Sinatra::Base
     # if params[:movie].split(/[\r\n\s]/).length > 1
     #   flash[:notice] = 'One movie at a time, take easy!'
     #   redirect '/movie'
-    #   return nil
+    #   return nils
     # end
 
     movie = params[:movie].strip
-    request_url = "#{API_BASE_URI}/api/v2/movie"
+    request_url = api_url("movie")
     param = {
       movie: movie
     }
@@ -134,7 +92,7 @@ class MovieViewApp < Sinatra::Base
     #   @results = JSON.parse(session[:result])
     #   @movie = session[:movie]
     # else
-    request_url = "#{API_BASE_URI}/api/v2/moviechecked/#{params[:id]}"
+    request_url = api_url("moviechecked/#{params[:id]}")
     result = HTTParty.get(request_url)
     @results = YAML.load(result['info'])
     # end
@@ -145,7 +103,7 @@ class MovieViewApp < Sinatra::Base
   end
 
   delete '/movie/:id' do
-    request_url = "#{API_BASE_URI}/api/v2/moviechecked/#{params[:id]}"
+    request_url = api_url("moviechecked/#{params[:id]}")
     result = HTTParty.delete(request_url)
     flash[:notice] = 'Record of movie deleted'
     redirect '/movie'

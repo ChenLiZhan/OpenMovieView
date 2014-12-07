@@ -3,7 +3,6 @@ source 'http://rubygems.org'
 gem 'thin'
 gem 'sinatra'
 gem 'sinatra-contrib'
-gem 'movie_crawler'
 gem 'json'
 gem 'httparty'
 
