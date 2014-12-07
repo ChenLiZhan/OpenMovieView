@@ -1,6 +1,6 @@
 require 'sinatra/base'
 require 'json'
-require 'sinatra/flash'
+#require 'sinatra/flash'
 require 'yaml'
 # require 'sinatra/namespace'
 require 'haml'

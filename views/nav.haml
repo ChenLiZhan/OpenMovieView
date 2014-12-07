@@ -1,8 +1,58 @@
 #header_wrapper
   %nav{:id => 'menu'}
-    #js_navigation= render_navigation(:expand_all => true)
-
-/ :javascript
-/   $(document).ready(function(){
-/     $("#js_navigation ul").superfish();
-/   });
+    #js_navigation
+      %ul
+        - if current_page?
+          %li{:class => 'selected simple-navigation-active-leaf', :id => 'info' }
+            %a{:href => '/', :class => 'selected'} HOME
+        -else
+          %li{:class => 'selected simple-navigation-active-leaf', :id => 'info' }
+            %a{:href => '/', :class => 'selected'} HOME
+        - if current_page?
+          %li{:id => 'intro' }
+            %span INTRO
+            %ul
+              %li{:id => "latest"}
+                %a{:href => "/info/latest"} Latest
+              %li{:id => "second_round"}
+                %a{:href => "/info/second_round"} Second_Round
+        -else
+          %li{:id => 'intro' }
+            %span INTRO
+            %ul
+              %li{:id => "latest"}
+                %a{:href => "/info/latest"} Latest
+              %li{:id => "second_round"}
+                %a{:href => "/info/second_round"} Second_Round
+        - if current_page?
+          %li{:id => 'boxoffice' }
+            %span Box_Office
+            %ul
+              %li{:id => "us"}
+                %a{:href => "/rank/1"} U.S
+              %li{:id => "taiwan"}
+                %a{:href => "/rank/2"} Taiwan
+              %li{:id => "dvd"}
+                %a{:href => "/rank/3"} DVD
+        -else
+          %li{:id => 'boxoffice' }
+            %span Box_Office
+            %ul
+              %li{:id => "us"}
+                %a{:href => "/rank/1"} U.S
+              %li{:id => "taiwan"}
+                %a{:href => "/rank/2"} Taiwan
+              %li{:id => "dvd"}
+                %a{:href => "/rank/3"} DVD
+        - if current_page?
+          %li{:id => 'info' }
+            %span Info
+            %ul
+              %li{:id => "search"}
+                %a{:href => "/movie"} Search for movie
+        -else
+          %li{:id => 'info' }
+            %span Info
+            %ul
+              %li{:id => "search"}
+                %a{:href => "/movie"} Search for movie

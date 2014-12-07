@@ -1,7 +1,8 @@
 require './app'
 require 'rake/testtask'
 
-task default: :spec
+
+task :default => :spec
 
 desc 'Run all tests'
 Rake::TestTask.new(name = :spec) do|t|
