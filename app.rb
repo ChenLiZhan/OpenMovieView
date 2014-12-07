@@ -28,56 +28,56 @@ class MovieCrawlerApp < Sinatra::Base
 
   API_BASE_URI = 'http://localhost:4567'
 
-  helpers do
-    # RANK_LIST = { '1' => 'U.S.', '2' => 'Taiwan', '3' => 'DVD' }
-
-    def get_movie_info(moviename)
-      # begin
-        # halt 404 if moviename == nil?
-        movie_crawled={
-          'type' => 'movie_info',
-          'info' => []
-        }
-        movie_crawled['info'] = MovieCrawler.get_movie_info(moviename)
-        movie_crawled
-    end
-
-    def get_ranks(category)
-      halt 404 if category.to_i > 3
-      ranks_after = {
-        'content_type' => 'rank_table',
-        'category' => category,
-        'content' => []
-      }
-
-      ranks_after['content'] = MovieCrawler.get_table(category)
-      ranks_after
-    end
-
-    def get_infos(category)
-      halt 404 if category == nil?
-      infos_after = {
-        'content_type' => 'info_list',
-        'category' => category,
-        'content' => []
-      }
-
-      infos_after['content'] = MovieCrawler.movies_parser(category)
-      infos_after
-    end
-
-    def topsum(n)
-      us1 = YAML.load(MovieCrawler::us_weekend).reduce(&:merge)
-      tp1 = YAML.load(MovieCrawler::taipei_weekend).reduce(&:merge)
-      dvd1 = YAML.load(MovieCrawler::dvd_rank).reduce(&:merge)
-      keys = [us1, tp1, dvd1].flat_map(&:keys).uniq
-      keys = keys[0, n]
-
-      keys.map! do |k|
-        { k => [{us:us1[k] || "0" }, { tp:tp1[k] || "0" }, { dvd:dvd1[k] || "0"}] }
-      end
-    end
-  end
+  # helpers do
+  #   # RANK_LIST = { '1' => 'U.S.', '2' => 'Taiwan', '3' => 'DVD' }
+  #
+  #   # def get_movie_info(moviename)
+  #   #   # begin
+  #   #     # halt 404 if moviename == nil?
+  #   #     movie_crawled={
+  #   #       'type' => 'movie_info',
+  #   #       'info' => []
+  #   #     }
+  #   #     movie_crawled['info'] = MovieCrawler.get_movie_info(moviename)
+  #   #     movie_crawled
+  #   # end
+  #   #
+  #   # def get_ranks(category)
+  #   #   halt 404 if category.to_i > 3
+  #   #   ranks_after = {
+  #   #     'content_type' => 'rank_table',
+  #   #     'category' => category,
+  #   #     'content' => []
+  #   #   }
+  #   #
+  #   #   ranks_after['content'] = MovieCrawler.get_table(category)
+  #   #   ranks_after
+  #   # end
+  #   #
+  #   # def get_infos(category)
+  #   #   halt 404 if category == nil?
+  #   #   infos_after = {
+  #   #     'content_type' => 'info_list',
+  #   #     'category' => category,
+  #   #     'content' => []
+  #   #   }
+  #   #
+  #   #   infos_after['content'] = MovieCrawler.movies_parser(category)
+  #   #   infos_after
+  #   # end
+  #
+  #   # def topsum(n)
+  #   #   us1 = YAML.load(MovieCrawler::us_weekend).reduce(&:merge)
+  #   #   tp1 = YAML.load(MovieCrawler::taipei_weekend).reduce(&:merge)
+  #   #   dvd1 = YAML.load(MovieCrawler::dvd_rank).reduce(&:merge)
+  #   #   keys = [us1, tp1, dvd1].flat_map(&:keys).uniq
+  #   #   keys = keys[0, n]
+  #   #
+  #   #   keys.map! do |k|
+  #   #     { k => [{us:us1[k] || "0" }, { tp:tp1[k] || "0" }, { dvd:dvd1[k] || "0"}] }
+  #   #   end
+  #   # end
+  # end
 
   after { ActiveRecord::Base.connection.close }
 
@@ -114,7 +114,7 @@ class MovieCrawlerApp < Sinatra::Base
     param = {
       movie: movie
     }
-    options = { 
+    options = {
       headers: { 'Content-Type' => 'application/json' },
       body: param.to_json
     }
