@@ -1,11 +1,9 @@
 require 'sinatra/base'
 #require 'movie_crawler'
 require 'json'
-require 'sinatra/flash'
 require 'yaml'
 # require 'sinatra/namespace'
 require 'haml'
-require 'sinatra/simple-navigation'
 require 'sinatra/flash'
 require 'httparty'
 #require_relative 'model/movie'
@@ -13,83 +11,52 @@ require 'httparty'
 
 # web version of MovieCrawlerApp(https://github.com/ChenLiZhan/SOA-Crawler)
 class MovieCrawlerApp < Sinatra::Base
-  set :views, Proc.new { File.join(root, "views") }
-  # enable :sessions
-  use Rack::Session::Pool
-  register Sinatra::Flash
+  enable :sessions
+  # use Rack::Session::Pool
   use Rack::MethodOverride
-  register Sinatra::SimpleNavigation
-  SimpleNavigation.config_file_paths << File.expand_path('../config', __FILE__)
-  # register Sinatra::Namespace
+  register Sinatra::Flash
 
- # set the sinatra configure
-  configure :production, :development do
-    enable :logging
-  end
+   configure :production, :development do
+     enable :logging
+   end
+   configure :development do
+     set :session_secret, "something"    # ignore if not using shotgun in development
+   end
 
-  API_BASE_URI = 'http://localhost:4567'
+  API_BASE_URI = 'http://127.0.0.1:4567'
   API_VER = '/api/v2/'
 
 
-  # helpers do
-  #   # RANK_LIST = { '1' => 'U.S.', '2' => 'Taiwan', '3' => 'DVD' }
-  #
-  #   # def get_movie_info(moviename)
-  #   #   # begin
-  #   #     # halt 404 if moviename == nil?
-  #   #     movie_crawled={
-  #   #       'type' => 'movie_info',
-  #   #       'info' => []
-  #   #     }
-  #   #     movie_crawled['info'] = MovieCrawler.get_movie_info(moviename)
-  #   #     movie_crawled
-  #   # end
-  #   #
-  #   # def get_ranks(category)
-  #   #   halt 404 if category.to_i > 3
-  #   #   ranks_after = {
-  #   #     'content_type' => 'rank_table',
-  #   #     'category' => category,
-  #   #     'content' => []
-  #   #   }
-  #   #
-  #   #   ranks_after['content'] = MovieCrawler.get_table(category)
-  #   #   ranks_after
-  #   # end
-  #   #
-  #   # def get_infos(category)
-  #   #   halt 404 if category == nil?
-  #   #   infos_after = {
-  #   #     'content_type' => 'info_list',
-  #   #     'category' => category,
-  #   #     'content' => []
-  #   #   }
-  #   #
-  #   #   infos_after['content'] = MovieCrawler.movies_parser(category)
-  #   #   infos_after
-  #   # end
-  #
-  #   # def topsum(n)
-  #   #   us1 = YAML.load(MovieCrawler::us_weekend).reduce(&:merge)
-  #   #   tp1 = YAML.load(MovieCrawler::taipei_weekend).reduce(&:merge)
-  #   #   dvd1 = YAML.load(MovieCrawler::dvd_rank).reduce(&:merge)
-  #   #   keys = [us1, tp1, dvd1].flat_map(&:keys).uniq
-  #   #   keys = keys[0, n]
-  #   #
-  #   #   keys.map! do |k|
-  #   #     { k => [{us:us1[k] || "0" }, { tp:tp1[k] || "0" }, { dvd:dvd1[k] || "0"}] }
-  #   #   end
-  #   # end
-  # end
+  helpers do
+    def current_page?(path = ' ')
+      path_info = request.path_info
+      path_info += ' ' if path_info == '/'
+      request_path = path_info.split '/'
+      request_path[1] == path
+    end
 
-  after { ActiveRecord::Base.connection.close }
-
-  get '/' do
-    haml :home
+    def api_url(resource)
+      URI.join(API_BASE_URI, API_VER, resource).to_s
+    end
   end
 
+
+  get '/' do
+    haml :home, :layout => true
+    # SimpleNavigation.config_file_paths
+    # settings.views
+  end
+
+
   get '/info/:category' do
-    @intros = get_infos(params[:category])
+    @intros = params[:category]
+    @list = HTTParty.get api_url("info/#{@intros}.json")
+
+    if @intros && @list.nil?
+      flash[:notice] = "list #{@list} not found" if @list.nil?
+      redirect '/'
+      return nil
+    end
 
     haml :intro
   end
@@ -159,6 +126,9 @@ class MovieCrawlerApp < Sinatra::Base
   end
 
   # # namespace '/api/v1' do
+
+
+# here is the api routes
 
   post '/api/v2/movie' do
     content_type :json, charset: 'utf-8'
