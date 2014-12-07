@@ -1,5 +1,5 @@
 require 'sinatra/base'
-require 'movie_crawler'
+#require 'movie_crawler'
 require 'json'
 require 'sinatra/flash'
 require 'yaml'
@@ -8,8 +8,8 @@ require 'haml'
 require 'sinatra/simple-navigation'
 require 'sinatra/flash'
 require 'httparty'
-require_relative 'model/movie'
-require_relative 'model/theater'
+#require_relative 'model/movie'
+#require_relative 'model/theater'
 
 # web version of MovieCrawlerApp(https://github.com/ChenLiZhan/SOA-Crawler)
 class MovieCrawlerApp < Sinatra::Base
