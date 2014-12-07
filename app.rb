@@ -110,7 +110,7 @@ class MovieViewApp < Sinatra::Base
     param = {
       movie: movie
     }
-    options = { 
+    options = {
       headers: { 'Content-Type' => 'application/json' },
       body: param.to_json
     }
