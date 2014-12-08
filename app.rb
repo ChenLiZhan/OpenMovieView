@@ -15,8 +15,8 @@ class MovieViewApp < Sinatra::Base
   use Rack::Session::Pool
   register Sinatra::Flash
   use Rack::MethodOverride
-  register Sinatra::SimpleNavigation
-  SimpleNavigation.config_file_paths << File.expand_path('../config', __FILE__)
+  # register Sinatra::SimpleNavigation
+  # SimpleNavigation.config_file_paths << File.expand_path('../config', __FILE__)
   # register Sinatra::Namespace
 
   configure :production, :development do
@@ -30,6 +30,13 @@ class MovieViewApp < Sinatra::Base
     # RANK_LIST = { '1' => 'U.S.', '2' => 'Taiwan', '3' => 'DVD' }
     def api_url(resource)
       URI.join(API_BASE_URI, API_VER, resource).to_s
+    end
+
+    def current_page?(path = ' ')
+      path_info = request.path_info
+      path_info += ' ' if path_info == '/'
+      request_path = path_info.split '/'
+      request_path[1] == path
     end
   end
 
