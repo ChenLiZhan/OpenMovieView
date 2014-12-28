@@ -7,6 +7,7 @@ require 'haml'
 require 'sinatra/simple-navigation'
 require 'sinatra/flash'
 require 'httparty'
+require 'aws-sdk'
 
 # web version of MovieCrawlerApp(https://github.com/ChenLiZhan/SOA-Crawler)
 class MovieViewApp < Sinatra::Base
@@ -25,6 +26,7 @@ class MovieViewApp < Sinatra::Base
 
   API_BASE_URI = 'https://serene-citadel-5567.herokuapp.com'
   API_VER = '/api/v2/'
+  TOPIC_ARN = 'arn:aws:sns:ap-northeast-1:618561116886:Movie'
 
   helpers do
     # RANK_LIST = { '1' => 'U.S.', '2' => 'Taiwan', '3' => 'DVD' }
@@ -38,6 +40,12 @@ class MovieViewApp < Sinatra::Base
       request_path = path_info.split '/'
       request_path[1] == path
     end
+
+    def notification(category, subject)
+      sns = AWS::SNS.new
+      t = sns.topics[TOPIC_ARN]
+      result = t.publish(category, subject: subject)
+    end
   end
 
   get '/' do
@@ -46,6 +54,7 @@ class MovieViewApp < Sinatra::Base
 
   get '/info/:category' do
     @category = params[:category]
+    notification(@category, 'info')
     @intros = HTTParty.get api_url("info/#{@category}.json")
 
     haml :intro
@@ -53,6 +62,7 @@ class MovieViewApp < Sinatra::Base
 
   get '/rank/:category' do
     @category = params[:category]
+    notification(@category, 'rank')
     @boxoffices = HTTParty.get api_url("rank/#{@category}.json")
 
     haml :boxoffice
