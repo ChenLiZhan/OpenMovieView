@@ -98,10 +98,11 @@ class MovieViewApp < Sinatra::Base
 
     queue = sqs.queues.create(unique_key, visibility_timeout: 90, maximum_message_size: 262144)
 
-    queue.poll do |received_message|
-      message = JSON.parse(received_message.body)
-      logger.info "received message '#{message}'"
-    end
+    received_message = queue.receive_message(wait_time_seconds: 20)
+    message = JSON.parse(received_message.body)
+    puts "received message '#{message}'"
+    queue.delete
+    redirect "/movie/#{message['movie_id']}"
     # result = HTTParty.post(request_url, options)
 
     # id = result.request.last_uri.path.split('/').last
