@@ -28,7 +28,7 @@ class MovieViewApp < Sinatra::Base
   # API_BASE_URI = 'http://localhost:8080'
   API_VER = '/api/v2/'
   TOPIC_ARN = 'arn:aws:sns:us-west-2:819536398009:Movie'
-  SINGLEMOVIE_TOPIC = 'arn:aws:sns:us-west-2:819536398009:moviesearch'
+  # SINGLEMOVIE_TOPIC = 'arn:aws:sns:us-west-2:819536398009:moviesearch'
 
   helpers do
     # RANK_LIST = { '1' => 'U.S.', '2' => 'Taiwan', '3' => 'DVD' }
@@ -91,7 +91,17 @@ class MovieViewApp < Sinatra::Base
       body: param.to_json
     }
 
-    notification(movie, 'search for single movie')
+    unique_key = "Movie-SQS-#{Time.new.to_i}"
+    notification(movie, unique_key)
+
+    sqs = AWS::SQS.new(region: ENV['AWS_REGION'])
+
+    queue = sqs.queues.create(unique_key, visibility_timeout: 90, maximum_message_size: 262144)
+
+    queue.poll do |received_message|
+      message = JSON.parse(received_message.body)
+      logger.info "received message '#{message}'"
+    end
     # result = HTTParty.post(request_url, options)
 
     # id = result.request.last_uri.path.split('/').last
