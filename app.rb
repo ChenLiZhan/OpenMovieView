@@ -25,8 +25,10 @@ class MovieViewApp < Sinatra::Base
   end
 
   API_BASE_URI = 'https://serene-citadel-5567.herokuapp.com'
+  # API_BASE_URI = 'http://localhost:8080'
   API_VER = '/api/v2/'
   TOPIC_ARN = 'arn:aws:sns:us-west-2:819536398009:Movie'
+  # SINGLEMOVIE_TOPIC = 'arn:aws:sns:us-west-2:819536398009:moviesearch'
 
   helpers do
     # RANK_LIST = { '1' => 'U.S.', '2' => 'Taiwan', '3' => 'DVD' }
@@ -79,9 +81,8 @@ class MovieViewApp < Sinatra::Base
     #   redirect '/movie'
     #   return nils
     # end
-
+    # request_url = api_url("movie")
     movie = params[:movie].strip
-    request_url = api_url("movie")
     param = {
       movie: movie
     }
@@ -89,19 +90,26 @@ class MovieViewApp < Sinatra::Base
       headers: { 'Content-Type' => 'application/json' },
       body: param.to_json
     }
-    result = HTTParty.post(request_url, options)
 
-    # if (result.code != 200 && result.code != 302)
-    #   flash[:notice] = 'Movie not found'
-    #   redirect '/movie'
-    #   return nil
-    # end
+    unique_key = "Movie-SQS-#{Time.new.to_i}"
+    notification(movie, unique_key)
 
-    id = result.request.last_uri.path.split('/').last
-    session[:result] = result.to_json
-    session[:movie] = movie
-    session[:action] = :create
-    redirect "/movie/#{id}"
+    sqs = AWS::SQS.new(region: ENV['AWS_REGION'])
+
+    queue = sqs.queues.create(unique_key, visibility_timeout: 90, maximum_message_size: 262144)
+
+    received_message = queue.receive_message(wait_time_seconds: 20)
+    message = JSON.parse(received_message.body)
+    puts "received message '#{message}'"
+    queue.delete
+    redirect "/movie/#{message['movie_id']}"
+    # result = HTTParty.post(request_url, options)
+
+    # id = result.request.last_uri.path.split('/').last
+    # session[:result] = result.to_json
+    # session[:movie] = movie
+    # session[:action] = :create
+    # redirect "/movie/#{id}"
   end
 
   get '/movie/:id' do
