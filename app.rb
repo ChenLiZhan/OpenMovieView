@@ -102,7 +102,7 @@ class MovieViewApp < Sinatra::Base
     message = JSON.parse(received_message.body)
     puts "received message '#{message}'"
     queue.delete
-    redirect "/movie/#{message['movie_id']}"
+    "/movie/#{message['movie_id']}"
     # result = HTTParty.post(request_url, options)
 
     # id = result.request.last_uri.path.split('/').last
