@@ -18,7 +18,7 @@ $(document).ready(function(){
         alert('Ajax request 發生錯誤');
       },
       success: function(response) {
-        window.location.href = "http://localhost:9292" + response;
+        window.location.href = "https://open-movie.herokuapp.com" + response;
       }
     });
   });
