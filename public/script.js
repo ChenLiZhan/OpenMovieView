@@ -7,8 +7,19 @@ $(document).ready(function(){
   }
 
   var block;
+  
+  $(document).ajaxStart(function(){
+    block = new ajaxLoader(this, options);
+  });
 
-  $("#check-submit").click(function(){
+  $(document).ajaxStop(function(){
+    block.remove();
+  });
+
+  $("#check-submit").click(function(e){
+    var $this = $(this);
+    e.preventDefault();
+
     $.ajax({
       url: 'movie',
       cache: false,
@@ -18,16 +29,10 @@ $(document).ready(function(){
         alert('Ajax request 發生錯誤');
       },
       success: function(response) {
-        window.location.href = "https://open-movie.herokuapp.com" + response;
+        window.location.href = "http://localhost:4567" + response;
       }
     });
+
   });
  
-  $(document).ajaxStart(function(){
-    block = new ajaxLoader(this, options);
-  });
-
-  $(document).ajaxStop(function(){
-    block.remove();
-  });
 });
