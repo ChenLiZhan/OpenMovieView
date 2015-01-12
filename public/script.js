@@ -26,7 +26,7 @@ $(document).ready(function(){
       type:'POST',
       data: { movie: $('#movie').val()},
       error: function(xhr) {
-        alert('Ajax request 發生錯誤');
+        alert('Movie not found!');
       },
       success: function(response) {
         window.location.href = "https://open-movie.herokuapp.com" + response;
